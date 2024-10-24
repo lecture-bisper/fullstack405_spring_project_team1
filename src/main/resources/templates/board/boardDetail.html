@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상세페이지</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <script th:inline="javascript">
+        //   사용자  ID
+        var userId = [[${userId}]];
+        // 화장실 번호
+        var wcId = [[${wcId}]];
+    </script>
+
+    <script src="/js/DetailKakaoMap.js" defer></script>
+    <script src="/js/WcBest.js" defer></script>
+    <script src="/js/WcFavorite.js" defer></script>
+
+    <script>
+        $(document).ready(function () {
+            // 목록 버튼 클릭 이벤트
+            $("#btn-list").on("click", function () {
+                window.history.back(); // 이전 페이지로 이동
+            });
+
+            // 패스워드 클릭 이벤트
+            $(".keyBtn").click(function () {
+                let keyValues = confirm("확인 시 키 1개 차감됩니다. 사용하시겠습니까?");
+                if (keyValues === true) {
+                    $.ajax({
+                        url: "/users/usePasskey",
+                        type: "POST",
+                        data: {"wcId": wcId},
+                        dataType: "json",
+                        success: function (response) {
+                            $("#passkey-count").text(response.passkey);
+                            $(".keyStyle").attr("type", "text"); // 비밀번호를 숫자로 표기
+                        },
+                        error: function (xhr, status, error) {
+                            let errorMsg = xhr.responseJSON ? xhr.responseJSON.error : "An unknown error occurred";
+                            alert(xhr.status + ": " + errorMsg);
+                        }
+                    });
+                }
+            });
+
+        })
+    </script>
+</head>
+
+<body>
+
+<header th:replace="~{/layout/Header :: headerNavbar}"></header>
+
+<!-- 상세페이지 시작 -->
+<main class="container">
+    <div class="mainConWrap text-center text-white">
+        <h2>상세페이지</h2>
+        <p>우리들의 공공화장실, 우화의 상세페이지입니다.</p>
+    </div>
+
+    <section class="boardBg p-5 mt-4 shadow">
+        <!--  카카오맵 include 시작 -->
+
+        <script type="text/javascript"
+                src="//dapi.kakao.com/v2/maps/sdk.js?appkey=00e9042c7f04c04f3d386355eeaeb634&libraries=services"></script>
+
+        <div class="map_wrap listMap">
+            <div id="map" class="mapSize"></div>
+        </div>
+
+        <input type="hidden" th:value="${userId}" id="hiddenUserId">
+        <input type="hidden" th:value="${wcInfo}" id="hiddenWcInfo">
+        <input type="hidden" th:value="${wcInfo.latitude}" id="hiddenLati">
+        <input type="hidden" th:value="${wcInfo.longitude}" id="hiddenLongi">
+        <input type="hidden" th:value="${wcInfo.detailAddr}" id="hiddenDetail">
+
+        <!--  카카오맵 include 끝 -->
+
+        <!--      <h3><span th:text="${wcInfo.name}"></span></h3>-->
+        <div class="float-end mt-4">
+            <div class="d-flex">
+                <input type="hidden" class="inputWcId" th:value="${wcInfo.id}">
+                <p class="me-2">
+                    <img src="/images/thumb_up.svg" alt="좋아요 아이콘" onclick="clickBest('like')" style="cursor: pointer">
+                    <span class="ms-1 like">0</span>
+                </p>
+                <p class="me-3">
+                    <img src="/images/thumb_down.svg" alt="싫어요 아이콘" onclick="clickBest('hate')" style="cursor: pointer">
+                    <span class="ms-1 hate">0</span>
+                </p>
+                <p>
+                    <img src="/images/favorites_off.svg" id="favorite-button" alt="즐겨찾기 아이콘"
+                         style="cursor: pointer"></p>
+                <!--          <span><img src="/images/favorites_on.svg" alt="선택된 즐겨찾기 아이콘"></span>-->
+
+            </div>
+        </div>
+
+        <div class="mt-5 clearBoth">
+            <hr class="mb-4">
+            <div class="listBox">
+                <img src="/images/address.svg" alt="주소 아이콘">
+                <p>주소 : <span th:text="${wcInfo.addr1}"></span> <span th:text="${wcInfo.detailAddr}"></span></p>
+            </div>
+            <div class="listBox">
+                <img src="/images/time.svg" alt="시간 아이콘">
+                <p>개방시간 : <span th:text="${wcInfo.time}"></span></p>
+            </div>
+            <div class="listBox">
+                <img src="/images/etc.svg" alt="기타 아이콘">
+                <p>기타 : <span id="contents" th:utext="${wcInfo.comment}"></span></p>
+            </div>
+            <div class="listBox">
+                <img src="/images/key.svg" alt="비밀번호 아이콘">
+                <div class="d-flex">
+                    <p>키 :
+                    <div th:switch="${wcInfo.level}" class="ms-2">
+                        <span th:case="1" th:text="${wcInfo.wcpass}"></span>
+                        <span th:case="2" th:text="${wcInfo.wcpass}"></span>
+                        <span th:case="3">
+                    <input th:attr="type=${showPassKey} ? 'text' : 'password'"
+                           name="key"
+                           id="keyvalue"
+                           class="keyStyle"
+                           th:value="${wcInfo.wcpass}"
+                           disabled/>
+                    <button type="button"
+                            class="keyBtn btn btn-outline-warning btn-sm">비밀번호 확인</button>
+                </span>
+                    </div>
+                </div>
+                </p>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-sm text-end">
+                <button type="button" class="btn btn-primary" id="btn-list">목록</button>
+            </div>
+        </div>
+    </section>
+</main>
+<!-- 상세페이지 끝 -->
+
+
+<footer th:replace="~{/layout/Footer :: footer}"></footer>
+
+</body>
+</html>
+
+
+
+
+
+

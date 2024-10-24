@@ -1,0 +1,48 @@
+<div th:fragment="favoriteView(itemList)">
+
+    <script src="/js/WcBest.js" defer></script>
+
+<!--  즐겨찾기 리스트 데이터-->
+<!--    <p th:text="${itemList}"></p>-->
+    <div class="row listWrap">
+    <div class="col-sm-6 mb-5" th:each="item : ${itemList}">
+<!--        <p th:text="${item}"></p>-->
+        <div class="d-flex position-relative">
+            <div th:switch="${item.favoriteWc.level}" class="box_img">
+                <p th:case="1"><img th:src="@{/images/step_icon01.svg}" alt="1단계 아이콘"></p>
+                <p th:case="2"><img th:src="@{/images/step_icon02.svg}" alt="2단계 아이콘"></p>
+                <p th:case="3"><img th:src="@{/images/step_icon03.svg}" alt="3단계 아이콘"></p>
+            </div>
+            <div class="iconWrap">
+                <div class="d-flex icon">
+                    <input type="hidden" class="inputWcId" th:value="${item.favoriteWc.id}">
+                    <p class="me-3">
+                        <img src="/images/thumb_up.svg" alt="좋아요 아이콘">
+                        <span class="ms-1 like">0</span>
+                    </p>
+                    <p>
+                        <img src="/images/thumb_down.svg" alt="싫어요 아이콘">
+                        <span class="ms-1 hate">0</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div class="listBox d-flex">
+            <img src="/images/time.svg" alt="시간 아이콘">
+            <p>개방시간 : <span th:text="${item.favoriteWc.time}">${timeText}</span></p>
+        </div>
+        <div class="listBox d-flex">
+            <img src="/images/address.svg" alt="위치 아이콘">
+            <p>주소 : <span th:text="${item.favoriteWc.addr1}">${addressText}</span></p>
+        </div>
+        <div class="listBox d-flex">
+            <img src="/images/key.svg" alt="키 아이콘">
+            <p>키 : <span th:text="${item.favoriteWc.wcpass}">${keyText}</span></p>
+        </div>
+        <div>
+            <a th:href="@{/location/wcDetail(wcId=${item.favoriteWc.id})}" class="btn btn-primary mt-2">자세히 보기</a>
+        </div>
+    </div>
+</div>
+</div>
